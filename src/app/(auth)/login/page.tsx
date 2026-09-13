@@ -1,17 +1,25 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useEffect, useState, FormEvent, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { getSupabase } from '@/lib/supabase';
 import styles from '../auth.module.css';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get('reset') === 'success') {
+      setResetSuccess(true);
+    }
+  }, [searchParams]);
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
@@ -72,6 +80,11 @@ export default function LoginPage() {
           </div>
 
           {error && <div className={styles['auth-error']}>{error}</div>}
+          {resetSuccess && (
+            <div className={styles['auth-success']}>
+              ✅ Password reset successfully! Sign in with your new password.
+            </div>
+          )}
 
           <form className={styles['auth-form']} onSubmit={handleLogin}>
             <div className="input-group">
@@ -98,6 +111,10 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
+            </div>
+
+            <div className={styles['auth-password-row']}>
+              <Link href="/forgot-password">Forgot password?</Link>
             </div>
 
             <button
@@ -129,5 +146,28 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className={styles['auth-page']}>
+        <div className={styles['auth-bg']}>
+          <div className={styles['auth-bg-orb']} /><div className={styles['auth-bg-orb']} />
+        </div>
+        <div className={styles['auth-container']}>
+          <div className={styles['auth-card']}>
+            <div className={styles['auth-logo']}>
+              <div className={styles['auth-logo-icon']}>🏏</div>
+              <h1>Welcome Back</h1>
+              <p>Loading...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }

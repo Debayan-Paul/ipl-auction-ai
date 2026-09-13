@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# Keep the configured branch synchronized with GitHub after every commit.
+git push origin HEAD
