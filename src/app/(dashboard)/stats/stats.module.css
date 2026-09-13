@@ -1,0 +1,243 @@
+.stats-page {
+  animation: fadeIn 0.4s ease-out;
+}
+
+/* === Search & Filters === */
+.stats-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+  flex-wrap: wrap;
+}
+
+.search-box {
+  flex: 1;
+  min-width: 280px;
+  position: relative;
+}
+
+.search-icon {
+  position: absolute;
+  left: var(--space-4);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+  font-size: var(--text-lg);
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: var(--space-3) var(--space-4) var(--space-3) var(--space-10);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+  outline: none;
+  transition: all var(--transition-fast);
+  font-family: var(--font-body);
+}
+
+.search-input:focus {
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 3px var(--theme-surface);
+}
+
+.filter-chips {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.filter-chip {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-family: var(--font-body);
+}
+
+.filter-chip:hover {
+  border-color: var(--theme-card-border);
+  background: var(--theme-surface);
+  color: var(--theme-primary);
+}
+
+.filter-chip.active {
+  border-color: var(--theme-primary);
+  background: var(--theme-surface);
+  color: var(--theme-primary);
+}
+
+/* === Player Grid === */
+.player-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-5);
+}
+
+.player-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  backdrop-filter: var(--glass-blur);
+  position: relative;
+  overflow: hidden;
+}
+
+.player-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--theme-gradient);
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+
+.player-card:hover {
+  border-color: var(--theme-card-border);
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-3px);
+}
+
+.player-card:hover::after {
+  opacity: 1;
+}
+
+.player-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.player-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-full);
+  background: var(--theme-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  color: white;
+  flex-shrink: 0;
+  border: 2px solid var(--theme-card-border);
+}
+
+.player-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.player-card-name {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player-card-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.player-card-meta span {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.player-card-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.player-stat {
+  text-align: center;
+}
+
+.player-stat-value {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+}
+
+.player-stat-label {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
+
+/* === Results Info === */
+.results-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-6);
+}
+
+.results-count {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.results-count strong {
+  color: var(--color-text-primary);
+}
+
+/* === Empty State === */
+.empty-state {
+  text-align: center;
+  padding: var(--space-20) var(--space-8);
+}
+
+.empty-state-icon {
+  font-size: var(--text-6xl);
+  margin-bottom: var(--space-4);
+  opacity: 0.5;
+}
+
+.empty-state h3 {
+  margin-bottom: var(--space-2);
+}
+
+.empty-state p {
+  color: var(--color-text-muted);
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* === Responsive === */
+@media (max-width: 768px) {
+  .stats-toolbar { flex-direction: column; }
+  .search-box { min-width: 100%; }
+  .player-grid { grid-template-columns: 1fr; }
+}

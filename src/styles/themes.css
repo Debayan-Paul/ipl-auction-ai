@@ -1,0 +1,134 @@
+/* ============================================
+   IPL TEAM THEMES — Dynamic CSS Variable Swap
+   Applied via data-team attribute on <html>
+   ============================================ */
+
+/* === Chennai Super Kings === */
+[data-team="CSK"] {
+  --theme-primary: #ffc107;
+  --theme-secondary: #1a237e;
+  --theme-accent: #ff6f00;
+  --theme-highlight: #ffffff;
+  --theme-surface: rgba(255, 193, 7, 0.06);
+  --theme-card-border: rgba(255, 193, 7, 0.2);
+  --theme-gradient: linear-gradient(135deg, #ffc107 0%, #1a237e 100%);
+  --theme-gradient-subtle: linear-gradient(135deg, rgba(255, 193, 7, 0.12) 0%, rgba(26, 35, 126, 0.06) 100%);
+  --theme-glow: 0 0 30px rgba(255, 193, 7, 0.25);
+}
+
+/* === Delhi Capitals === */
+[data-team="DC"] {
+  --theme-primary: #004ba0;
+  --theme-secondary: #d32f2f;
+  --theme-accent: #fdd835;
+  --theme-highlight: #ffffff;
+  --theme-surface: rgba(0, 75, 160, 0.06);
+  --theme-card-border: rgba(0, 75, 160, 0.2);
+  --theme-gradient: linear-gradient(135deg, #004ba0 0%, #d32f2f 100%);
+  --theme-gradient-subtle: linear-gradient(135deg, rgba(0, 75, 160, 0.12) 0%, rgba(211, 47, 47, 0.06) 100%);
+  --theme-glow: 0 0 30px rgba(0, 75, 160, 0.25);
+}
+
+/* === Gujarat Titans === */
+[data-team="GT"] {
+  --theme-primary: #0d1b2a;
+  --theme-secondary: #00bcd4;
+  --theme-accent: #ffd700;
+  --theme-highlight: #ffffff;
+  --theme-surface: rgba(0, 188, 212, 0.06);
+  --theme-card-border: rgba(0, 188, 212, 0.2);
+  --theme-gradient: linear-gradient(135deg, #0d1b2a 0%, #00bcd4 100%);
+  --theme-gradient-subtle: linear-gradient(135deg, rgba(13, 27, 42, 0.12) 0%, rgba(0, 188, 212, 0.06) 100%);
+  --theme-glow: 0 0 30px rgba(0, 188, 212, 0.25);
+}
+
+/* === Kolkata Knight Riders === */
+[data-team="KKR"] {
+  --theme-primary: #3a0078;
+  --theme-secondary: #ffd700;
+  --theme-accent: #1a1a2e;
+  --theme-highlight: #ffffff;
+  --theme-surface: rgba(58, 0, 120, 0.06);
+  --theme-card-border: rgba(58, 0, 120, 0.2);
+  --theme-gradient: linear-gradient(135deg, #3a0078 0%, #ffd700 100%);
+  --theme-gradient-subtle: linear-gradient(135deg, rgba(58, 0, 120, 0.12) 0%, rgba(255, 215, 0, 0.06) 100%);
+  --theme-glow: 0 0 30px rgba(58, 0, 120, 0.25);
+}
+
+/* === Lucknow Super Giants === */
+[data-team="LSG"] {
+  --theme-primary: #d32f2f;
+  --theme-secondary: #1565c0;
+  --theme-accent: #b0bec5;
+  --theme-highlight: #388e3c;
+  --theme-surface: rgba(211, 47, 47, 0.06);
+  --theme-card-border: rgba(211, 47, 47, 0.2);
+  --theme-gradient: linear-gradient(135deg, #d32f2f 0%, #1565c0 100%);
+  --theme-gradient-subtle: linear-gradient(135deg, rgba(211, 47, 47, 0.12) 0%, rgba(21, 101, 192, 0.06) 100%);
+  --theme-glow: 0 0 30px rgba(211, 47, 47, 0.25);
+}
+
+/* === Mumbai Indians === */
+[data-team="MI"] {
+  --theme-primary: #004ba0;
+  --theme-secondary: #ffd700;
+  --theme-accent: #ff6f00;
+  --theme-highlight: #388e3c;
+  --theme-surface: rgba(0, 75, 160, 0.06);
+  --theme-card-border: rgba(0, 75, 160, 0.2);
+  --theme-gradient: linear-gradient(135deg, #004ba0 0%, #ffd700 100%);
+  --theme-gradient-subtle: linear-gradient(135deg, rgba(0, 75, 160, 0.12) 0%, rgba(255, 215, 0, 0.06) 100%);
+  --theme-glow: 0 0 30px rgba(0, 75, 160, 0.25);
+}
+
+/* === Punjab Kings === */
+[data-team="PBKS"] {
+  --theme-primary: #8b0000;
+  --theme-secondary: #0d1b2a;
+  --theme-accent: #ffd700;
+  --theme-highlight: #ffffff;
+  --theme-surface: rgba(139, 0, 0, 0.06);
+  --theme-card-border: rgba(139, 0, 0, 0.2);
+  --theme-gradient: linear-gradient(135deg, #8b0000 0%, #0d1b2a 100%);
+  --theme-gradient-subtle: linear-gradient(135deg, rgba(139, 0, 0, 0.12) 0%, rgba(13, 27, 42, 0.06) 100%);
+  --theme-glow: 0 0 30px rgba(139, 0, 0, 0.25);
+}
+
+/* === Rajasthan Royals === */
+[data-team="RR"] {
+  --theme-primary: #e91e90;
+  --theme-secondary: #0d1b2a;
+  --theme-accent: #ffd700;
+  --theme-highlight: #ffffff;
+  --theme-surface: rgba(233, 30, 144, 0.06);
+  --theme-card-border: rgba(233, 30, 144, 0.2);
+  --theme-gradient: linear-gradient(135deg, #e91e90 0%, #0d1b2a 100%);
+  --theme-gradient-subtle: linear-gradient(135deg, rgba(233, 30, 144, 0.12) 0%, rgba(13, 27, 42, 0.06) 100%);
+  --theme-glow: 0 0 30px rgba(233, 30, 144, 0.25);
+}
+
+/* === Royal Challengers Bengaluru === */
+[data-team="RCB"] {
+  --theme-primary: #c62828;
+  --theme-secondary: #1a1a2e;
+  --theme-accent: #ffd700;
+  --theme-highlight: #ffffff;
+  --theme-surface: rgba(198, 40, 40, 0.06);
+  --theme-card-border: rgba(198, 40, 40, 0.2);
+  --theme-gradient: linear-gradient(135deg, #c62828 0%, #1a1a2e 100%);
+  --theme-gradient-subtle: linear-gradient(135deg, rgba(198, 40, 40, 0.12) 0%, rgba(26, 26, 46, 0.06) 100%);
+  --theme-glow: 0 0 30px rgba(198, 40, 40, 0.25);
+}
+
+/* === Sunrisers Hyderabad === */
+[data-team="SRH"] {
+  --theme-primary: #ff6f00;
+  --theme-secondary: #1a1a2e;
+  --theme-accent: #d32f2f;
+  --theme-highlight: #fdd835;
+  --theme-surface: rgba(255, 111, 0, 0.06);
+  --theme-card-border: rgba(255, 111, 0, 0.2);
+  --theme-gradient: linear-gradient(135deg, #ff6f00 0%, #1a1a2e 100%);
+  --theme-gradient-subtle: linear-gradient(135deg, rgba(255, 111, 0, 0.12) 0%, rgba(26, 26, 46, 0.06) 100%);
+  --theme-glow: 0 0 30px rgba(255, 111, 0, 0.25);
+}
