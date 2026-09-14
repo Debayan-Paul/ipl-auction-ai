@@ -52,6 +52,7 @@ export default function AdminPanelPage() {
         {[
           { href: '/admin/features', icon: '🎛️', title: 'Feature Flags', desc: 'Toggle feature visibility per auction phase' },
           { href: '/admin/data', icon: '📂', title: 'Data Management', desc: 'Upload, scrape, and manage player data' },
+          { href: '/admin/users', icon: '👥', title: 'User Management', desc: 'Manage roles (Managers, Auctioneers) and team assignments' },
           { href: '/admin/ai', icon: '🧠', title: 'AI Model Control', desc: 'Retrain models, control predictions' },
           { href: '/admin/features', icon: '💳', title: 'Payments', desc: 'View Razorpay transactions, manage subscriptions' },
         ].map((card) => (

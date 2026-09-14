@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT UNIQUE NOT NULL,
   full_name TEXT NOT NULL DEFAULT '',
-  avatar_url TEXT,
+  avatar_url TEXT, 
   role TEXT NOT NULL DEFAULT 'free' CHECK (role IN ('free', 'pro', 'business_manager', 'business_auctioneer', 'admin')),
   team_abbreviation TEXT,
   franchise_id UUID,
@@ -254,3 +254,18 @@ CREATE POLICY "Users can view own subscription" ON public.subscriptions FOR SELE
 -- Comparison history: users can read and create their own
 CREATE POLICY "Users can view own comparisons" ON public.comparison_history FOR SELECT USING (auth.uid() = user_id OR is_featured = true);
 CREATE POLICY "Users can create comparisons" ON public.comparison_history FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- ===================================================
+-- 10. Password Reset Tokens (Custom Auth)
+-- ===================================================
+CREATE TABLE IF NOT EXISTS public.password_reset_tokens (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  token TEXT UNIQUE NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- RLS for reset tokens (Service Role only)
+ALTER TABLE public.password_reset_tokens ENABLE ROW LEVEL SECURITY;
+-- No public policies -> only accessible via service role in API route.

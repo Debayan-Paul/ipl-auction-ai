@@ -4,6 +4,8 @@ import { useEffect, useState, FormEvent, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getSupabase } from '@/lib/supabase';
+import BackButton from '../components/BackButton';
+import OtpInput from '../components/OtpInput';
 import styles from '../auth.module.css';
 
 function LoginForm() {
@@ -38,7 +40,8 @@ function LoginForm() {
         return;
       }
 
-      router.push('/stats');
+      const redirectTo = searchParams.get('redirect') || '/';
+      router.push(redirectTo);
     } catch {
       setError('An unexpected error occurred');
     } finally {
@@ -66,6 +69,9 @@ function LoginForm() {
 
   return (
     <div className={styles['auth-page']}>
+      {/* Top Left of Display Back Button */}
+      <BackButton href="/" label="Back to Home" />
+
       <div className={styles['auth-bg']}>
         <div className={styles['auth-bg-orb']} />
         <div className={styles['auth-bg-orb']} />
@@ -79,7 +85,18 @@ function LoginForm() {
             <p>Sign in to your IPL Auction Arena account</p>
           </div>
 
-          {error && <div className={styles['auth-error']}>{error}</div>}
+          {error && (
+            <div className={styles['auth-error']}>
+              <p style={{ margin: 0 }}>{error}</p>
+              {error.toLowerCase().includes('not confirmed') && (
+                <div style={{ marginTop: 8 }}>
+                  <Link href={`/verify-email?email=${encodeURIComponent(email)}`} style={{ color: '#ffd700', fontWeight: 700, textDecoration: 'underline' }}>
+                    Enter your 6-digit OTP to verify account →
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
           {resetSuccess && (
             <div className={styles['auth-success']}>
               ✅ Password reset successfully! Sign in with your new password.
@@ -112,6 +129,24 @@ function LoginForm() {
                 required
               />
             </div>
+
+            {error.toLowerCase().includes('not confirmed') && (
+              <OtpInput
+                email={email}
+                password={password}
+                isVerified={false}
+                setIsVerified={(verified) => {
+                  if (verified) {
+                    setError('');
+                    setResetSuccess(true);
+                  }
+                }}
+                onError={setError}
+                onSuccess={(msg) => {
+                  setError('');
+                }}
+              />
+            )}
 
             <div className={styles['auth-password-row']}>
               <Link href="/forgot-password">Forgot password?</Link>

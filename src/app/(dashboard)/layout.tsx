@@ -7,6 +7,7 @@ import { getSupabase } from '@/lib/supabase';
 import { useAuthStore, useThemeStore, useSidebarStore } from '@/lib/store';
 import { getInitials, cn } from '@/lib/utils';
 import type { UserRole } from '@/lib/types';
+import RazorpayCheckout from '@/components/RazorpayCheckout';
 import styles from './dashboard.module.css';
 
 interface NavItem {
@@ -15,18 +16,31 @@ interface NavItem {
   href: string;
   minRole: UserRole;
   badge?: string;
+  adminOnly?: boolean;
 }
 
-const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
+const NAV_GROUPS: {
+  label: string;
+  items: NavItem[];
+  adminOnly?: boolean;
+  minRole?: UserRole;
+}[] = [
   {
-    label: 'Analytics',
+    label: 'Overview',
+    items: [
+      { icon: '🏠', label: 'My Account', href: '/home', minRole: 'free' },
+    ],
+  },
+  {
+    label: 'Fan Analytics',
     items: [
       { icon: '📊', label: 'Player Stats', href: '/stats', minRole: 'free' },
       { icon: '⚔️', label: 'Compare Players', href: '/compare', minRole: 'free' },
     ],
   },
   {
-    label: 'Pro Features',
+    label: 'Pro Suite',
+    minRole: 'pro',
     items: [
       { icon: '🤖', label: 'AI Predictions', href: '/predictions', minRole: 'pro', badge: 'PRO' },
       { icon: '🏟️', label: 'Team vs Team', href: '/team-compare', minRole: 'pro', badge: 'PRO' },
@@ -36,12 +50,22 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     ],
   },
   {
-    label: 'Admin',
+    label: 'Business Suite',
+    minRole: 'business_manager',
     items: [
-      { icon: '🛡️', label: 'Control Panel', href: '/admin/panel', minRole: 'admin' },
-      { icon: '📂', label: 'Data Management', href: '/admin/data', minRole: 'admin' },
-      { icon: '🎛️', label: 'Feature Flags', href: '/admin/features', minRole: 'admin' },
-      { icon: '🧠', label: 'AI Model', href: '/admin/ai', minRole: 'admin' },
+      { icon: '🏢', label: 'Franchise War Room', href: '/live-auction?mode=manager', minRole: 'business_manager', badge: 'FRANCHISE' },
+      { icon: '🔨', label: 'Auctioneer Podium', href: '/live-auction?mode=auctioneer', minRole: 'business_auctioneer', badge: 'OFFICIAL' },
+    ],
+  },
+  {
+    label: 'Admin Control Center',
+    adminOnly: true,
+    items: [
+      { icon: '🛡️', label: 'Control Panel', href: '/admin/panel', minRole: 'admin', adminOnly: true },
+      { icon: '👥', label: 'User Management', href: '/admin/users', minRole: 'admin', adminOnly: true },
+      { icon: '📂', label: 'Data Management', href: '/admin/data', minRole: 'admin', adminOnly: true },
+      { icon: '🎛️', label: 'Feature Flags', href: '/admin/features', minRole: 'admin', adminOnly: true },
+      { icon: '🧠', label: 'AI Model', href: '/admin/ai', minRole: 'admin', adminOnly: true },
     ],
   },
 ];
@@ -62,7 +86,7 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const router = useRouter();
   const { user, setUser, setLoading } = useAuthStore();
-  const { teamTheme, applyTheme } = useThemeStore();
+  const { teamTheme, setTeamTheme, applyTheme, resetToDefaultTheme } = useThemeStore();
   const { isCollapsed, isMobileOpen, toggle, setMobileOpen } = useSidebarStore();
   const [initialized, setInitialized] = useState(false);
 
@@ -74,27 +98,57 @@ export default function DashboardLayout({
       const { data: { session } } = await supabase.auth.getSession();
 
       if (session?.user) {
-        setUser({
-          id: session.user.id,
-          email: session.user.email || '',
-          full_name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
-          avatar_url: session.user.user_metadata?.avatar_url || null,
-          role: (session.user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) ? 'admin' : 'free' as UserRole,
-          team_abbreviation: null,
-          franchise_id: null,
-          created_at: session.user.created_at,
-        });
-      } else {
-        const hasKeys = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_URL !== 'your-supabase-url';
-        if (!hasKeys) {
-          // Dev mock user
+        let userRole: UserRole = 'free';
+        let fullName = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User';
+        let avatarUrl = session.user.user_metadata?.avatar_url || null;
+        let teamAbbr = null;
+        let franchiseId = null;
+
+        try {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+          if (profileData) {
+            userRole = profileData.role || 'free';
+            fullName = profileData.full_name || fullName;
+            avatarUrl = profileData.avatar_url || avatarUrl;
+            teamAbbr = profileData.team_abbreviation || null;
+            franchiseId = profileData.franchise_id || null;
+          }
+        } catch (e) {
+          console.warn('Error reading profile:', e);
+        }
+
+        const adminEmail = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'debayanpaul629@gmail.com').trim().toLowerCase();
+        const emailLower = (session.user.email || '').trim().toLowerCase();
+        if (emailLower === adminEmail) {
+          userRole = 'admin';
+        } else {
+          // Fallback profile if table is empty
           setUser({
-            id: 'mock-user-id',
-            email: 'admin@demo.com',
-            full_name: 'Demo Admin',
+            id: session.user.id,
+            email: session.user.email || '',
+            full_name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+            avatar_url: null,
+            role: 'free',
+            team_abbreviation: 'DEFAULT',
+            franchise_id: null,
+            created_at: session.user.created_at,
+          });
+        }
+      } else {
+        // In dev mode, provide fallback demo admin if session fails
+        if (process.env.NODE_ENV === 'development') {
+          setUser({
+            id: '00000000-0000-0000-0000-000000000001',
+            email: 'debayanpaul629@gmail.com',
+            full_name: 'Debayan Paul',
             avatar_url: null,
             role: 'admin',
-            team_abbreviation: 'CSK',
+            team_abbreviation: 'DEFAULT',
             franchise_id: null,
             created_at: new Date().toISOString(),
           });
@@ -113,6 +167,7 @@ export default function DashboardLayout({
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         if (!session) {
+          resetToDefaultTheme();
           setUser(null);
           router.push('/login');
         }
@@ -120,7 +175,7 @@ export default function DashboardLayout({
     );
 
     return () => subscription.unsubscribe();
-  }, [setUser, setLoading, router]);
+  }, [setUser, setLoading, router, setTeamTheme, resetToDefaultTheme]);
 
   // Apply theme on mount
   useEffect(() => {
@@ -130,6 +185,7 @@ export default function DashboardLayout({
   const handleLogout = async () => {
     const supabase = getSupabase();
     await supabase.auth.signOut();
+    resetToDefaultTheme();
     setUser(null);
     router.push('/login');
   };
@@ -164,12 +220,15 @@ export default function DashboardLayout({
     );
   }
 
-  const userRole = user?.role || 'free';
+  const adminEmail = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'debayanpaul629@gmail.com').trim().toLowerCase();
+  const currentUserEmail = (user?.email || '').trim().toLowerCase();
+  const isAdmin = currentUserEmail === adminEmail;
+  const userRole = isAdmin ? 'admin' : (user?.role === 'admin' ? 'free' : user?.role || 'free');
   const userRoleLevel = ROLE_HIERARCHY[userRole];
 
   const getPageTitle = () => {
     const allItems = NAV_GROUPS.flatMap((g) => g.items);
-    const match = allItems.find((item) => pathname.startsWith(item.href));
+    const match = allItems.find((item) => pathname.startsWith(item.href.split('?')[0]));
     return match?.label || 'Dashboard';
   };
 
@@ -189,18 +248,37 @@ export default function DashboardLayout({
           isMobileOpen && styles['mobile-open']
         )}
       >
-        <div className={styles['sidebar-header']}>
-          <div className={styles['sidebar-logo']}>🏏</div>
-          <div className={styles['sidebar-title']}>
-            IPL <span>Arena</span>
+        <Link
+          href="/"
+          title="Exit to Landing Page"
+          style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center' }}
+        >
+          <div className={styles['sidebar-header']}>
+            <div className={styles['sidebar-logo']}>🏏</div>
+            <div className={styles['sidebar-title']}>
+              IPL <span>Arena</span>
+            </div>
           </div>
-        </div>
+        </Link>
 
         <nav className={styles['sidebar-nav']}>
           {NAV_GROUPS.map((group) => {
-            const visibleItems = group.items.filter(
-              (item) => ROLE_HIERARCHY[item.minRole] <= userRoleLevel
-            );
+            // Strictly hide admin panel from ANY user who is not debayanpaul629@gmail.com
+            if (group.adminOnly && !isAdmin) {
+              return null;
+            }
+
+            // Hide higher tier groups
+            if (group.minRole && ROLE_HIERARCHY[group.minRole] > userRoleLevel) {
+              return null;
+            }
+
+            const visibleItems = group.items.filter((item) => {
+              if (item.adminOnly && !isAdmin) return false;
+              if (item.minRole === 'admin' && !isAdmin) return false;
+              return ROLE_HIERARCHY[item.minRole] <= userRoleLevel;
+            });
+
             if (visibleItems.length === 0) return null;
 
             return (
@@ -212,7 +290,7 @@ export default function DashboardLayout({
                     href={item.href}
                     className={cn(
                       styles['nav-item'],
-                      pathname.startsWith(item.href) && styles.active
+                      pathname.startsWith(item.href.split('?')[0]) && styles.active
                     )}
                     onClick={() => setMobileOpen(false)}
                   >
@@ -226,6 +304,25 @@ export default function DashboardLayout({
               </div>
             );
           })}
+
+          {/* Upgrade Card for Free Users */}
+          {userRole === 'free' && !isCollapsed && (
+            <div style={{ margin: '16px 12px', padding: '14px', borderRadius: '12px', background: 'rgba(255, 215, 0, 0.07)', border: '1px solid rgba(255, 215, 0, 0.25)' }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#ffd700', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span>⭐</span> Upgrade to Pro
+              </div>
+              <p style={{ fontSize: 11, color: 'var(--color-text-muted)', margin: '0 0 10px 0', lineHeight: 1.4 }}>
+                Unlock AI 2027 Projections, Team Comparisons & Digital Twin.
+              </p>
+              <RazorpayCheckout
+                amount={999}
+                description="Pro Plan - 1 Year Unlimited Access"
+                buttonText="Get Pro (₹999)"
+                className="btn btn-primary btn-sm"
+                style={{ width: '100%', fontSize: 12, padding: '7px', textAlign: 'center', display: 'block', marginTop: 0 }}
+              />
+            </div>
+          )}
         </nav>
 
         <div className={styles['sidebar-footer']}>

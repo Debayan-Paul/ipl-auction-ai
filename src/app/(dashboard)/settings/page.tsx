@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import DeleteAccountModal from '@/components/DeleteAccountModal';
 
 export default function SettingsPage() {
   const [purseLimit, setPurseLimit] = useState(120);
@@ -9,6 +10,7 @@ export default function SettingsPage() {
   const [strategyFocus, setStrategyFocus] = useState('balanced');
   const [monteCarloIterations, setMonteCarloIterations] = useState(1000);
   const [saved, setSaved] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const handleSave = () => {
     setSaved(true);
@@ -66,9 +68,58 @@ export default function SettingsPage() {
       </div>
 
       {/* Save Button */}
-      <button className="btn btn-primary btn-lg" onClick={handleSave} style={{ width: '100%' }}>
+      <button className="btn btn-primary btn-lg" onClick={handleSave} style={{ width: '100%', marginBottom: 'var(--space-8)' }}>
         {saved ? '✓ Settings Saved!' : '💾 Save Settings'}
       </button>
+
+      {/* Danger Zone: Account Deletion */}
+      <div
+        className="glass-card"
+        style={{
+          padding: 'var(--space-6)',
+          border: '1px solid rgba(239, 68, 68, 0.35)',
+          background: 'rgba(239, 68, 68, 0.04)',
+          borderRadius: 'var(--radius-lg)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 'var(--space-2)' }}>
+          <span style={{ fontSize: 20 }}>⚠️</span>
+          <h3 style={{ color: '#ef4444', margin: 0, fontSize: 'var(--text-lg)' }}>Danger Zone</h3>
+        </div>
+        <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--text-sm)', marginBottom: 'var(--space-4)', lineHeight: 1.5 }}>
+          Permanently delete your account and all associated data. Once initiated, your profile, team theming, custom strategies, and saved comparisons will be erased forever. This action is irreversible.
+        </p>
+
+        <button
+          type="button"
+          onClick={() => setShowDeleteModal(true)}
+          style={{
+            background: 'rgba(239, 68, 68, 0.15)',
+            border: '1px solid rgba(239, 68, 68, 0.5)',
+            color: '#ef4444',
+            fontWeight: 700,
+            padding: '10px 20px',
+            borderRadius: 'var(--radius-md)',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#ef4444';
+            e.currentTarget.style.color = '#ffffff';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)';
+            e.currentTarget.style.color = '#ef4444';
+          }}
+        >
+          🗑️ Delete Account
+        </button>
+      </div>
+
+      <DeleteAccountModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+      />
     </div>
   );
 }

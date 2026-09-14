@@ -72,9 +72,11 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    // Admin route protection
-    if (pathname.startsWith('/admin') && user.email !== process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
-      return NextResponse.redirect(new URL('/stats', request.url));
+    // Admin route protection - ONLY debayanpaul629@gmail.com can access admin routes
+    const adminEmail = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'debayanpaul629@gmail.com').trim().toLowerCase();
+    const currentUserEmail = (user.email || '').trim().toLowerCase();
+    if (pathname.startsWith('/admin') && currentUserEmail !== adminEmail) {
+      return NextResponse.redirect(new URL('/home', request.url));
     }
 
     return response;

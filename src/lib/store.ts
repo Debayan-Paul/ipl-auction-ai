@@ -41,26 +41,30 @@ interface ThemeState {
   teamTheme: TeamAbbreviation | null;
   setTeamTheme: (team: TeamAbbreviation | null) => void;
   applyTheme: () => void;
+  resetToDefaultTheme: () => void;
 }
 
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set, get) => ({
-      teamTheme: null,
+      teamTheme: 'DEFAULT',
       setTeamTheme: (team) => {
-        set({ teamTheme: team });
+        const chosen = team || 'DEFAULT';
+        set({ teamTheme: chosen });
         if (typeof document !== 'undefined') {
-          if (team) {
-            document.documentElement.setAttribute('data-team', team);
-          } else {
-            document.documentElement.removeAttribute('data-team');
-          }
+          document.documentElement.setAttribute('data-team', chosen);
         }
       },
       applyTheme: () => {
-        const team = get().teamTheme;
-        if (typeof document !== 'undefined' && team) {
+        const team = get().teamTheme || 'DEFAULT';
+        if (typeof document !== 'undefined') {
           document.documentElement.setAttribute('data-team', team);
+        }
+      },
+      resetToDefaultTheme: () => {
+        set({ teamTheme: 'DEFAULT' });
+        if (typeof document !== 'undefined') {
+          document.documentElement.setAttribute('data-team', 'DEFAULT');
         }
       },
     }),

@@ -4,6 +4,8 @@ import { useState, FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getSupabase } from '@/lib/supabase';
+import BackButton from '../components/BackButton';
+import OtpInput from '../components/OtpInput';
 import styles from '../auth.module.css';
 
 export default function RegisterPage() {
@@ -12,10 +14,12 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [isVerified, setIsVerified] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleRegister = async (e: FormEvent) => {
+  const handleRegisterAndSignIn = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -29,18 +33,19 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!isVerified) {
+      setError('Please click "Send OTP" to receive your 6-digit verification code, then click "Verify" before signing in.');
+      return;
+    }
+
     setLoading(true);
 
     try {
+      // 1. Sign in to Supabase directly
       const supabase = getSupabase();
-      const { error: authError } = await supabase.auth.signUp({
+      const { error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
-        options: {
-          data: {
-            full_name: fullName,
-          },
-        },
       });
 
       if (authError) {
@@ -48,9 +53,10 @@ export default function RegisterPage() {
         return;
       }
 
-      router.push('/stats');
+      // 2. Direct user to landing page (logged in)
+      router.push('/');
     } catch {
-      setError('An unexpected error occurred');
+      setError('An unexpected error occurred during sign in. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -76,6 +82,9 @@ export default function RegisterPage() {
 
   return (
     <div className={styles['auth-page']}>
+      {/* Top Left of Display Back Button */}
+      <BackButton href="/" label="Back to Home" />
+
       <div className={styles['auth-bg']}>
         <div className={styles['auth-bg-orb']} />
         <div className={styles['auth-bg-orb']} />
@@ -90,8 +99,9 @@ export default function RegisterPage() {
           </div>
 
           {error && <div className={styles['auth-error']}>{error}</div>}
+          {success && <div className={styles['auth-success']}>{success}</div>}
 
-          <form className={styles['auth-form']} onSubmit={handleRegister}>
+          <form className={styles['auth-form']} onSubmit={handleRegisterAndSignIn}>
             <div className="input-group">
               <label className="input-label" htmlFor="fullName">Full Name</label>
               <input
@@ -102,6 +112,7 @@ export default function RegisterPage() {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 required
+                disabled={loading}
               />
             </div>
 
@@ -115,6 +126,7 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                disabled={loading || isVerified}
               />
             </div>
 
@@ -129,6 +141,7 @@ export default function RegisterPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
+                disabled={loading || isVerified}
               />
             </div>
 
@@ -142,15 +155,38 @@ export default function RegisterPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
+                disabled={loading || isVerified}
               />
             </div>
+
+            {/* Space under Password for 6-Digit OTP & Beside Verify Button */}
+            <OtpInput
+              email={email}
+              password={password}
+              fullName={fullName}
+              isVerified={isVerified}
+              setIsVerified={setIsVerified}
+              onError={setError}
+              onSuccess={(msg) => {
+                setError('');
+                setSuccess(msg);
+              }}
+            />
 
             <button
               type="submit"
               className={`btn btn-primary btn-lg ${styles['auth-submit']}`}
               disabled={loading}
+              style={{
+                background: isVerified ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' : undefined,
+                borderColor: isVerified ? '#22c55e' : undefined,
+              }}
             >
-              {loading ? 'Creating account...' : '🏏 Create Account'}
+              {loading
+                ? 'Signing in...'
+                : isVerified
+                ? '🏏 Sign In to Dashboard'
+                : 'Verify Email First to Sign In'}
             </button>
           </form>
 

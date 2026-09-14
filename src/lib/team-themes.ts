@@ -1,4 +1,4 @@
-export type TeamAbbreviation = 'CSK' | 'DC' | 'GT' | 'KKR' | 'LSG' | 'MI' | 'PBKS' | 'RR' | 'RCB' | 'SRH';
+export type TeamAbbreviation = 'DEFAULT' | 'CSK' | 'DC' | 'GT' | 'KKR' | 'LSG' | 'MI' | 'PBKS' | 'RR' | 'RCB' | 'SRH';
 
 export interface TeamTheme {
   abbreviation: TeamAbbreviation;
@@ -11,6 +11,15 @@ export interface TeamTheme {
 }
 
 export const TEAM_THEMES: Record<TeamAbbreviation, TeamTheme> = {
+  DEFAULT: {
+    abbreviation: 'DEFAULT',
+    name: 'Default (Glowy Monochrome)',
+    primary: '#ffffff',
+    secondary: '#000000',
+    accent: '#e5e5e5',
+    highlight: '#ffffff',
+    description: 'Ethereal glowy white typography with deep midnight black glassmorphism',
+  },
   CSK: {
     abbreviation: 'CSK',
     name: 'Chennai Super Kings',

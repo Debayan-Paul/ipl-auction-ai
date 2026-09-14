@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { getSupabase } from '@/lib/supabase';
 import styles from './landing.module.css';
 
 function useCountUp(target: number, duration: number = 2000) {
@@ -54,12 +55,68 @@ function AnimatedCounter({ target, suffix = '', label, icon }: { target: number;
 
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userProfile, setUserProfile] = useState<{ email?: string; full_name?: string; role?: string } | null>(null);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+
+    const supabase = getSupabase();
+
+    const loadUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setIsLoggedIn(true);
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('email, full_name, role')
+            .eq('id', session.user.id)
+            .single();
+          
+          setUserProfile(profile || {
+            email: session.user.email,
+            full_name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0],
+            role: 'free',
+          });
+        } catch {
+          setUserProfile({
+            email: session.user.email,
+            full_name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0],
+            role: 'free',
+          });
+        }
+      } else {
+        setIsLoggedIn(false);
+        setUserProfile(null);
+      }
+    };
+
+    loadUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        setIsLoggedIn(true);
+        loadUser();
+      } else {
+        setIsLoggedIn(false);
+        setUserProfile(null);
+      }
+    });
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      subscription.unsubscribe();
+    };
   }, []);
+
+  const handleSignOut = async () => {
+    const supabase = getSupabase();
+    await supabase.auth.signOut();
+    setIsLoggedIn(false);
+    setUserProfile(null);
+  };
 
   return (
     <div className={styles.landing}>
@@ -74,15 +131,95 @@ export default function LandingPage() {
 
         <ul className={styles['nav-links']}>
           <li><Link href="/features">Features</Link></li>
-          <li><Link href="/stats">Player Stats</Link></li>
-          <li><Link href="/compare">Compare</Link></li>
+          {isLoggedIn && (
+            <>
+              <li><Link href="/stats">Player Stats</Link></li>
+              <li><Link href="/compare">Compare</Link></li>
+            </>
+          )}
           <li><Link href="#pricing">Pricing</Link></li>
           <li><Link href="/contact">Contact</Link></li>
         </ul>
 
-        <div className={styles['nav-actions']}>
-          <Link href="/login" className="btn btn-ghost">Sign In</Link>
-          <Link href="/register" className="btn btn-primary">Get Started</Link>
+        <div className={styles['nav-actions']} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {isLoggedIn ? (
+            <>
+              {(() => {
+                const adminEmail = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'debayanpaul629@gmail.com').trim().toLowerCase();
+                const userEmail = (userProfile?.email || '').trim().toLowerCase();
+                const isAdmin = userEmail === adminEmail || userProfile?.role === 'admin';
+                const cleanName = (userProfile?.full_name || 'Manager').replace(/\s*\(Admin\)/gi, '').trim();
+
+                return (
+                  <Link
+                    href="/home"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      textDecoration: 'none',
+                      cursor: 'pointer',
+                      padding: '4px 8px',
+                      borderRadius: '8px',
+                      transition: 'background 0.2s',
+                    }}
+                    title="View Account Details"
+                  >
+                    <div
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: '50%',
+                        background: 'var(--theme-gradient, linear-gradient(135deg, #ffd700, #ff8c00))',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 700,
+                        fontSize: 13,
+                        color: '#000',
+                      }}
+                    >
+                      {cleanName.charAt(0).toUpperCase()}
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: '#ffffff', lineHeight: 1.2 }}>
+                        {cleanName}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 700,
+                          color: isAdmin ? '#ffd700' : userProfile?.role === 'pro' ? '#00e5ff' : '#9ca3af',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.06em',
+                        }}
+                      >
+                        {isAdmin ? 'ADMIN' : userProfile?.role === 'pro' ? 'PRO MEMBER' : 'FREE TIER'}
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })()}
+
+              <Link href="/home" className="btn btn-primary btn-sm" style={{ padding: '6px 14px' }}>
+                Dashboard
+              </Link>
+
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="btn btn-ghost btn-sm"
+                style={{ border: '1px solid rgba(255,255,255,0.15)', padding: '6px 12px' }}
+              >
+                Sign Out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link href="/login" className="btn btn-ghost">Sign In</Link>
+              <Link href="/register" className="btn btn-primary">Get Started</Link>
+            </>
+          )}
         </div>
       </nav>
 
@@ -112,12 +249,25 @@ export default function LandingPage() {
           </p>
 
           <div className={styles['hero-actions']}>
-            <Link href="/register" className="btn btn-primary btn-lg">
-              🏏 Start Free
-            </Link>
-            <Link href="/features" className="btn btn-secondary btn-lg">
-              Explore Features →
-            </Link>
+            {isLoggedIn ? (
+              <>
+                <Link href="/home" className="btn btn-primary btn-lg">
+                  🏏 Open Dashboard
+                </Link>
+                <Link href="/stats" className="btn btn-secondary btn-lg">
+                  Browse 471 Players →
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/register" className="btn btn-primary btn-lg">
+                  🏏 Start Free
+                </Link>
+                <Link href="/features" className="btn btn-secondary btn-lg">
+                  Explore Features →
+                </Link>
+              </>
+            )}
           </div>
 
           <div className={styles['hero-stats']}>
