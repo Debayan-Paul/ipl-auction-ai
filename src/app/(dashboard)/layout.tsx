@@ -126,19 +126,19 @@ export default function DashboardLayout({
         const emailLower = (session.user.email || '').trim().toLowerCase();
         if (emailLower === adminEmail) {
           userRole = 'admin';
-        } else {
-          // Fallback profile if table is empty
-          setUser({
-            id: session.user.id,
-            email: session.user.email || '',
-            full_name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
-            avatar_url: null,
-            role: 'free',
-            team_abbreviation: 'DEFAULT',
-            franchise_id: null,
-            created_at: session.user.created_at,
-          });
         }
+
+        // Always set user with resolved profile data (for both admin and non-admin)
+        setUser({
+          id: session.user.id,
+          email: session.user.email || '',
+          full_name: fullName,
+          avatar_url: avatarUrl,
+          role: userRole,
+          team_abbreviation: (teamAbbr as any) || 'DEFAULT',
+          franchise_id: franchiseId,
+          created_at: session.user.created_at,
+        });
       } else {
         // In dev mode, provide fallback demo admin if session fails
         if (process.env.NODE_ENV === 'development') {
@@ -305,8 +305,8 @@ export default function DashboardLayout({
             );
           })}
 
-          {/* Upgrade Card for Free Users */}
-          {userRole === 'free' && !isCollapsed && (
+          {/* Upgrade Card for Free Users (hidden for admin/auctioneer) */}
+          {userRole === 'free' && !isAdmin && !isCollapsed && (
             <div style={{ margin: '16px 12px', padding: '14px', borderRadius: '12px', background: 'rgba(255, 215, 0, 0.07)', border: '1px solid rgba(255, 215, 0, 0.25)' }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: '#ffd700', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span>⭐</span> Upgrade to Pro

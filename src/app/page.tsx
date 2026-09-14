@@ -421,9 +421,15 @@ export default function LandingPage() {
         <div className={styles['cta-content']}>
           <h2>Ready to Dominate the Auction?</h2>
           <p>Join thousands of cricket enthusiasts and franchise scouts using AI-powered analytics.</p>
-          <Link href="/register" className="btn btn-primary btn-lg">
-            🏏 Get Started — It&apos;s Free
-          </Link>
+          {isLoggedIn ? (
+            <Link href="/home" className="btn btn-primary btn-lg">
+              🏏 Open Dashboard
+            </Link>
+          ) : (
+            <Link href="/register" className="btn btn-primary btn-lg">
+              🏏 Get Started — It&apos;s Free
+            </Link>
+          )}
         </div>
       </section>
 
@@ -440,8 +446,17 @@ export default function LandingPage() {
             <ul>
               <li><Link href="/features">Features</Link></li>
               <li><Link href="#pricing">Pricing</Link></li>
-              <li><Link href="/stats">Player Stats</Link></li>
-              <li><Link href="/compare">Compare</Link></li>
+              {isLoggedIn ? (
+                <>
+                  <li><Link href="/stats">Player Stats</Link></li>
+                  <li><Link href="/compare">Compare</Link></li>
+                </>
+              ) : (
+                <>
+                  <li><Link href="/register">Player Stats</Link></li>
+                  <li><Link href="/register">Compare</Link></li>
+                </>
+              )}
             </ul>
           </div>
 
@@ -449,7 +464,6 @@ export default function LandingPage() {
             <h4>Resources</h4>
             <ul>
               <li><Link href="/features">Documentation</Link></li>
-              <li><Link href="/contact">API Access</Link></li>
               <li><Link href="/contact">Support</Link></li>
             </ul>
           </div>
@@ -457,8 +471,8 @@ export default function LandingPage() {
           <div className={styles['footer-col']}>
             <h4>Legal</h4>
             <ul>
-              <li><Link href="/contact">Privacy Policy</Link></li>
-              <li><Link href="/contact">Terms of Service</Link></li>
+              <li><Link href="/privacy-policy">Privacy Policy</Link></li>
+              <li><Link href="/terms-of-service">Terms of Service</Link></li>
               <li><Link href="/contact">Contact</Link></li>
             </ul>
           </div>

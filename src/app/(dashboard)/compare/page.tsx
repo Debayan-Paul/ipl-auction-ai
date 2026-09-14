@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, startTransition, useCallback } from 'react';
 import { getInitials, getRoleBadgeClass, getCountryFlag, cn } from '@/lib/utils';
 import { useAuthStore } from '@/lib/store';
 import type { PlayerRole } from '@/lib/types';
@@ -60,6 +60,9 @@ export default function ComparePage() {
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // O(1) player lookup map
+  const playerMap = useMemo(() => new Map(allPlayers.map(p => [p.id, p])), [allPlayers]);
+
   // Fetch all 471 real database players on mount
   useEffect(() => {
     async function loadPlayers() {
@@ -99,10 +102,10 @@ export default function ComparePage() {
         if (res.ok) {
           const data = await res.json();
           if (data.comparisons && data.comparisons.length > 0) {
-            // Build items
+            // Build items — label will be resolved when allPlayers loads
             const items: RecentComparisonItem[] = data.comparisons.map((c: any) => ({
               player_ids: c.player_ids,
-              label: c.label || 'Saved Matchup',
+              label: c.label || '',
               timestamp: new Date(c.created_at).getTime(),
             }));
             if (items.length > 0) {
@@ -124,11 +127,29 @@ export default function ComparePage() {
     loadHistory();
   }, [user?.id]);
 
+  // Resolve 'Saved Matchup' / empty labels to actual player names once allPlayers is loaded
+  useEffect(() => {
+    if (allPlayers.length === 0 || recentComparisons.length === 0) return;
+    const needsResolve = recentComparisons.some(c => !c.label || c.label === 'Saved Matchup');
+    if (!needsResolve) return;
+
+    setRecentComparisons((prev) => prev.map((item) => {
+      if (item.label && item.label !== 'Saved Matchup') return item;
+      const names = item.player_ids
+        .map((id) => playerMap.get(id)?.name)
+        .filter(Boolean);
+      return {
+        ...item,
+        label: names.length >= 2 ? names.join(' vs ') : item.label || 'Comparison',
+      };
+    }));
+  }, [allPlayers, recentComparisons.length, playerMap]);
+
   // Save comparison to recent history
-  const saveRecentComparison = (playerIds: string[]) => {
+  const saveRecentComparison = useCallback((playerIds: string[]) => {
     if (playerIds.length < 2) return;
     const names = playerIds
-      .map((id) => allPlayers.find((p) => p.id === id)?.name)
+      .map((id) => playerMap.get(id)?.name)
       .filter(Boolean);
     if (names.length < 2) return;
 
@@ -151,13 +172,14 @@ export default function ComparePage() {
 
     // Save to API
     if (user?.id) {
+      // Fire-and-forget — don't block UI
       fetch('/api/compare/history', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ player_ids: playerIds }),
       }).catch(console.error);
     }
-  };
+  }, [playerMap, user?.id]);
 
   const filteredSuggestions = useMemo(() => {
     if (!search && !searchFocused) return [];
@@ -176,9 +198,9 @@ export default function ComparePage() {
 
   const selectedData = useMemo(() => {
     return selectedPlayers
-      .map((id) => allPlayers.find((p) => p.id === id))
+      .map((id) => playerMap.get(id))
       .filter(Boolean) as ComparedPlayer[];
-  }, [selectedPlayers, allPlayers]);
+  }, [selectedPlayers, playerMap]);
 
   // Recommended players based on the currently selected player(s)
   const recommendedPlayers = useMemo(() => {
@@ -222,26 +244,34 @@ export default function ComparePage() {
     }
   };
 
-  const removePlayer = (id: string) => {
-    setSelectedPlayers(selectedPlayers.filter((pid) => pid !== id));
-    const newInsights = { ...aiInsights };
-    delete newInsights[id];
-    setAiInsights(newInsights);
-    setAiVerdict('');
-  };
+  const removePlayer = useCallback((id: string) => {
+    setSelectedPlayers(prev => prev.filter((pid) => pid !== id));
+    startTransition(() => {
+      setAiInsights(prev => {
+        const newInsights = { ...prev };
+        delete newInsights[id];
+        return newInsights;
+      });
+      setAiVerdict('');
+    });
+  }, []);
 
-  const clearAll = () => {
+  const clearAll = useCallback(() => {
     setSelectedPlayers([]);
-    setAiInsights({});
-    setAiVerdict('');
-  };
+    startTransition(() => {
+      setAiInsights({});
+      setAiVerdict('');
+    });
+  }, []);
 
-  const loadComparison = (playerIds: string[]) => {
+  const loadComparison = useCallback((playerIds: string[]) => {
     setSelectedPlayers(playerIds);
-    setAiInsights({});
-    setAiVerdict('');
+    startTransition(() => {
+      setAiInsights({});
+      setAiVerdict('');
+    });
     saveRecentComparison(playerIds);
-  };
+  }, [saveRecentComparison]);
 
   const generateAiInsights = async () => {
     if (selectedData.length < 2) return;
@@ -531,7 +561,7 @@ export default function ComparePage() {
             onFocus={() => setSearchFocused(true)}
             onBlur={() => {
               // Graceful close without blocking onMouseDown
-              setTimeout(() => setSearchFocused(false), 200);
+              setTimeout(() => setSearchFocused(false), 100);
             }}
             style={{ fontSize: 'var(--text-sm)' }}
           />
